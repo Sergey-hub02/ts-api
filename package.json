@@ -1,0 +1,19 @@
+{
+  "name": "ts-api",
+  "version": "1.0.0",
+  "description": "API, созданное с помощью Node.js, Express, PostgreSQL, TypeORM",
+  "main": "index.ts",
+  "repository": "https://github.com/Sergey-hub02/ts-api",
+  "author": "Sergey-hub02 (s.park190802@gmail.com)",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.4.1",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "argon2": "^0.30.3",
+    "pg": "^8.11.1",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.3.17"
+  }
+}
