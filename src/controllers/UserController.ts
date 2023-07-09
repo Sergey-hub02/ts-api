@@ -191,4 +191,56 @@ export default class UserController {
       console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
     }
   }
+
+  /**
+   * Обновляет данные указанного пользователя
+   * @param request
+   * @param response
+   */
+  public update: RequestHandler = async (request, response) => {
+    console.log(`[${new Date().toLocaleString()}]: PUT ${get_full_url(request)}`);
+
+    if (!request.params.id || !parseInt(request.params.id)) {
+      response.status(404);
+
+      response.json({
+        errors: ["Некорректный идентификатор пользователя!"],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Некорректный идентификатор пользователя!`);
+      return;
+    }
+
+    const user: User = new User();
+    user.user_id = parseInt(request.params.id);
+
+    if (request.body.username && request.body.username.length !== 0) {
+      user.username = request.body.username;
+    }
+    if (request.body.email && request.body.email.length !== 0) {
+      user.email = request.body.email;
+    }
+    if (request.body.password && request.body.password.length !== 0) {
+      const hashed_password = await argon2.hash(request.body.password);
+      user.password = hashed_password;
+    }
+
+    try {
+      const updated_user = await this._repository.save(user);
+
+      response.status(200);
+      response.json(updated_user);
+
+      console.log(`[${new Date().toLocaleString()}]: Обновление пользователя с id = ${user.user_id} прошло успешно!`);
+    }
+    catch (error) {
+      response.status(500);
+
+      response.json({
+        errors: [error.message],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
+    }
+  }
 }

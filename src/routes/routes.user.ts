@@ -8,5 +8,6 @@ const user_controller = new UserController(AppDataSource);
 user_router.post("/", user_controller.create);
 user_router.get("/", user_controller.get_all);
 user_router.get("/:id", user_controller.get_one);
+user_router.put("/:id", user_controller.update);
 
 export default user_router;
