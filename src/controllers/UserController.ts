@@ -243,4 +243,42 @@ export default class UserController {
       console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
     }
   }
+
+  /**
+   * Удаляет данные указанного пользователя из базы данных
+   * @param request
+   * @param response
+   */
+  public delete: RequestHandler = async (request, response) => {
+    console.log(`[${new Date().toLocaleString()}]: DELETE ${get_full_url(request)}`);
+
+    if (!request.params.id || !parseInt(request.params.id)) {
+      response.status(404);
+
+      response.json({
+        errors: ["Некорректный идентификатор пользователя!"],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Некорректный идентификатор пользователя!`);
+      return;
+    }
+
+    const delete_result = await this._repository.delete(request.params.id);
+
+    if (delete_result.affected === 0) {
+      response.status(404);
+
+      response.json({
+        errors: [`Пользователь с id = ${request.params.id} не найден!`],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Пользователь с id = ${request.params.id} не найден!`);
+      return;
+    }
+
+    response.status(200);
+    response.json(delete_result);
+
+    console.log(`[${new Date().toLocaleString()}]: Удаление пользователя с id = ${request.params.id} прошло успешно!`);
+  }
 }
