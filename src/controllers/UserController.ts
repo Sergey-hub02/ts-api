@@ -7,6 +7,7 @@ import User from "../entities/User.js";
  * Контроллер, обрабатывающий все запросы, связанные с сущностью User
  */
 export default class UserController {
+  private _limit: number = 15;
   private _repository: Repository<User>;
 
   public constructor(data_source: DataSource) {
@@ -60,6 +61,7 @@ export default class UserController {
         errors: errors,
       });
 
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Пользователь выполнил неверный запрос!`);
       return;
     }
 
@@ -73,14 +75,66 @@ export default class UserController {
 
     try {
       const added_user = await this._repository.save(user);
+
       response.status(201);
       response.json(added_user);
+
+      console.log(`[${new Date().toLocaleString()}]: Данные пользователя добавлены в БД!`);
     }
     catch (error) {
       response.json(500);
+
       response.json({
         errors: [error.message],
       });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
+    }
+  }
+
+  /**
+   * Возвращает список пользователей из базы данных
+   * @param request
+   * @param response
+   */
+  public get_all: RequestHandler = async (request, response) => {
+    console.log(`[${new Date().toLocaleString()}]: GET /api/v1/users/`);
+
+    let query: any = {
+      select: {
+        user_id: true,
+        username: true,
+        email: true,
+        created_at: true,
+        updated_at: true,
+      },
+    };
+
+    const page = parseInt(request.query.page as string);
+
+    if (page && page > 0) {
+      const offset: number = (page - 1) * this._limit;
+
+      query.skip = offset;
+      query.take = this._limit;
+    }
+
+    try {
+      const users: User[] = await this._repository.find(query);
+
+      response.status(200);
+      response.json(users);
+
+      console.log(`[${new Date().toLocaleString()}]: Данные пользователей получены!`);
+    }
+    catch (error) {
+      response.status(500);
+
+      response.json({
+        errors: [error.message],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
     }
   }
 }
