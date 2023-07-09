@@ -1,4 +1,5 @@
 import express from "express";
+import user_router from "./routes/routes.user.js";
 
 const PORT = 4000;
 
@@ -8,11 +9,7 @@ const main = async (): Promise<void> => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  app.get("/", (_, response) => {
-    response.json({
-      message: "Всё работает!",
-    });
-  });
+  app.use("/api/v1/users/", user_router);
 
   app.listen(PORT, () => {
     console.log(`Сервер запущен на http://localhost:${PORT}/`);
@@ -22,5 +19,5 @@ const main = async (): Promise<void> => {
 
 main()
   .catch((error: Error) => {
-    console.error(error.message);
+    console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
   });
