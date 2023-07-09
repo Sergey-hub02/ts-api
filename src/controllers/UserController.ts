@@ -1,5 +1,6 @@
 import { Repository, DataSource } from "typeorm";
 import { RequestHandler } from "express";
+import { get_full_url } from "../utils/utils.js";
 import argon2 from "argon2";
 import User from "../entities/User.js";
 
@@ -21,7 +22,7 @@ export default class UserController {
    * @returns
    */
   public create: RequestHandler = async (request, response) => {
-    console.log(`[${new Date().toLocaleString()}]: POST /api/v1/users/`);
+    console.log(`[${new Date().toLocaleString()}]: POST ${get_full_url(request)}`);
 
     const username: string = request.body.username;
     const email: string = request.body.email;
@@ -98,7 +99,7 @@ export default class UserController {
    * @param response
    */
   public get_all: RequestHandler = async (request, response) => {
-    console.log(`[${new Date().toLocaleString()}]: GET /api/v1/users/`);
+    console.log(`[${new Date().toLocaleString()}]: GET ${get_full_url(request)}`);
 
     let query: any = {
       select: {
@@ -126,6 +127,59 @@ export default class UserController {
       response.json(users);
 
       console.log(`[${new Date().toLocaleString()}]: Данные пользователей получены!`);
+    }
+    catch (error) {
+      response.status(500);
+
+      response.json({
+        errors: [error.message],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
+    }
+  }
+
+  /**
+   * Возвращает данные указанного пользователя
+   * @param request
+   * @param response
+   */
+  public get_one: RequestHandler = async (request, response) => {
+    console.log(`[${new Date().toLocaleString()}]: GET ${get_full_url(request)}`);
+
+    if (!request.params.id || !parseInt(request.params.id)) {
+      response.status(404);
+
+      response.json({
+        errors: ["Некорректный идентификатор пользователя!"],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Некорректный идентификатор пользователя!`);
+      return;
+    }
+
+    const user_id: number = parseInt(request.params.id);
+
+    try {
+      const user = await this._repository.findOneBy({
+        user_id: user_id,
+      });
+
+      if (!user) {
+        response.status(404);
+
+        response.json({
+          errors: [`Пользователь с id = ${user_id} не найден!`],
+        });
+
+        console.error(`[ERROR ${new Date().toLocaleString()}]: Пользователь с id = ${user_id} не найден!`);
+        return;
+      }
+
+      response.status(200);
+      response.json(user);
+
+      console.error(`[${new Date().toLocaleString()}]: Данные пользователя были успешно получены!`);
     }
     catch (error) {
       response.status(500);
