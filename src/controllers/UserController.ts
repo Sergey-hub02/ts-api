@@ -281,4 +281,76 @@ export default class UserController {
 
     console.log(`[${new Date().toLocaleString()}]: Удаление пользователя с id = ${request.params.id} прошло успешно!`);
   }
+
+  /**
+   * Выполняет проверку данных пользователя для авторизации
+   * @param request
+   * @param response
+   */
+  public login: RequestHandler = async (request, response) => {
+    console.log(`[${new Date().toLocaleString()}]: POST ${get_full_url(request)}`);
+
+    /*========== ВАЛИДАЦИЯ ДАННЫХ ==========*/
+    const errors: string[] = [];
+
+    if (!request.body.username_or_email || request.body.username_or_email.length === 0) {
+      errors.push("Не заполнено поле \"Имя пользователя или email\"!");
+    }
+    if (!request.body.password || request.body.password.length === 0) {
+      errors.push("Не заполнено поле \"Пароль\"!");
+    }
+
+    if (errors.length !== 0) {
+      response.status(400);
+
+      response.json({
+        errors: errors,
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Пользователь не заполнил обязательные поля!`);
+      return;
+    }
+
+    const username_or_email: string = request.body.username_or_email;
+    const password: string = request.body.password;
+
+    /*========== ПРОВЕРКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ ==========*/
+    const field: string = (username_or_email.includes("@")) ? "email" : "username";
+    const user = await this._repository.findOneBy({ [field]: username_or_email });
+
+    if (!user) {
+      response.status(403);
+
+      response.json({
+        login: false,
+        message: `Пользователь с именем или email \"${username_or_email}\" не найден!`,
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Пользователь ввёл неверное имя или неверный email!`);
+      return;
+    }
+
+    const verification_result: boolean = await argon2.verify(user.password, password);
+
+    if (!verification_result) {
+      response.status(403);
+
+      response.json({
+        login: false,
+        message: `Неправильный пароль!`,
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Пользователь ввёл неправильный пароль!`);
+      return;
+    }
+
+    response.status(200);
+
+    response.json({
+      login: true,
+      message: `Авторизация прошла успешно!`,
+    });
+
+    console.log(`[${new Date().toLocaleString()}]: Авторизация прошла успешно!`);
+  }
 }
