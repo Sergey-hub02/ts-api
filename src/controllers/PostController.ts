@@ -148,4 +148,79 @@ export default class PostController {
       console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
     }
   }
+
+  /**
+   * Возвращает данные указанной публикации
+   * @param request
+   * @param response
+   */
+  public get_one: RequestHandler = async (request, response) => {
+    console.log(`[${new Date().toLocaleString()}]: GET ${get_full_url(request)}`);
+
+    if (!request.params.id || !parseInt(request.params.id)) {
+      response.status(404);
+
+      response.json({
+        errors: ["Некорректный идентификатор публикации!"],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Некорректный идентификатор публикации!`);
+      return;
+    }
+
+    const post_id: number = parseInt(request.params.id);
+
+    try {
+      const post = await this._repository.findOne({
+        relations: {
+          author: true,
+          categories: true,
+        },
+        select: {
+          post_id: true,
+          title: true,
+          content: true,
+          author: {
+            user_id: true,
+            username: true,
+            email: true,
+          },
+          categories: {
+            category_id: true,
+            name: true,
+          },
+          created_at: true,
+          updated_at: true,
+        },
+        where: {
+          post_id: post_id,
+        }
+      });
+
+      if (!post) {
+        response.status(404);
+
+        response.json({
+          errors: [`Публикация с id = ${post_id} не найдена!`],
+        });
+
+        console.error(`[ERROR ${new Date().toLocaleString()}]: Публикация с id = ${post_id} не найдена!`);
+        return;
+      }
+
+      response.status(200);
+      response.json(post);
+
+      console.log(`[${new Date().toLocaleString()}]: Данные публикации получены!`);
+    }
+    catch (error) {
+      response.status(500);
+
+      response.json({
+        errors: [error.message],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
+    }
+  }
 }
