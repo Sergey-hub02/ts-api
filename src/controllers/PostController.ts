@@ -223,4 +223,67 @@ export default class PostController {
       console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
     }
   }
+
+  /**
+   * Обновляет данные указанной публикации
+   * @param request
+   * @param response
+   */
+  public update: RequestHandler = async (request, response) => {
+    console.log(`[${new Date().toLocaleString()}]: PUT ${get_full_url(request)}`);
+
+    if (!request.params.id || !parseInt(request.params.id)) {
+      response.status(404);
+
+      response.json({
+        errors: ["Некорректный идентификатор публикации!"],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Некорректный идентификатор публикации!`);
+      return;
+    }
+
+    const post: Post = new Post();
+    post.post_id = parseInt(request.params.id);
+
+    if (request.body.title && request.body.title.length !== 0) {
+      post.title = request.body.title;
+    }
+    if (request.body.content && request.body.content.length !== 0) {
+      post.content = request.body.content;
+    }
+    if (request.body.author_id && parseInt(request.body.author_id)) {
+      const author: User = new User();
+
+      author.user_id = parseInt(request.body.author_id);
+      post.author = author;
+    }
+    if (request.body.categories && request.body.categories.length !== 0) {
+      const post_categories: Category[] = request.body.categories.map((category_id: number) => {
+        const category: Category = new Category();
+        category.category_id = category_id;
+        return category;
+      });
+
+      post.categories = post_categories;
+    }
+
+    try {
+      const updated_post = await this._repository.save(post);
+
+      response.status(200);
+      response.json(updated_post);
+
+      console.log(`[${new Date().toLocaleString()}]: Данные публикации были успешно обновлены!`);
+    }
+    catch (error) {
+      response.status(500);
+
+      response.json({
+        errors: [error.message],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
+    }
+  }
 }
