@@ -286,4 +286,43 @@ export default class PostController {
       console.error(`[ERROR ${new Date().toLocaleString()}]: ${error.message}`);
     }
   }
+
+  /**
+   * Удаляет данные публикации из базы данных
+   * @param request
+   * @param response
+   * @returns
+   */
+  public delete: RequestHandler = async (request, response) => {
+    console.log(`[${new Date().toLocaleString()}]: DELETE ${get_full_url(request)}`);
+
+    if (!request.params.id || !parseInt(request.params.id)) {
+      response.status(404);
+
+      response.json({
+        errors: ["Некорректный идентификатор публикации!"],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Некорректный идентификатор публикации!`);
+      return;
+    }
+
+    const delete_result = await this._repository.delete(request.params.id);
+
+    if (delete_result.affected === 0) {
+      response.status(404);
+
+      response.json({
+        errors: [`Публикация с id = ${request.params.id} не найдена!`],
+      });
+
+      console.error(`[ERROR ${new Date().toLocaleString()}]: Публикация с id = ${request.params.id} не найдена!`);
+      return;
+    }
+
+    response.status(200);
+    response.json(delete_result);
+
+    console.log(`[${new Date().toLocaleString()}]: Удаление публикации с id = ${request.params.id} прошло успешно!`);
+  }
 }
